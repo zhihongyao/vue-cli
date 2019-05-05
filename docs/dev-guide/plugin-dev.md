@@ -18,7 +18,7 @@ A CLI plugin is an npm package that can add additional features to the project u
 Don't overuse vue-cli plugins! If you want just to include a certain dependency, e.g. [Lodash](https://lodash.com/) - it's easier to do it manually with npm than create a specific plugin only to do so.
 :::
 
-CLI Plugin should always contain a [Service Plugin](#service-plugin) as its main export, and can optionally contain a [Generator](#generator), a [Prompt File](#prompts) and a [Vue UI integration](#ui-integrtion).
+CLI Plugin should always contain a [Service Plugin](#service-plugin) as its main export, and can optionally contain a [Generator](#generator), a [Prompt File](#prompts) and a [Vue UI integration](#ui-integration).
 
 As an npm package, CLI plugin must have a `package.json` file. It's also recommended to have a plugin description in `README.md` to help others find your plugin on npm.
 
@@ -33,6 +33,44 @@ So, typical CLI plugin folder structure looks like the following:
 ├── prompts.js    # prompts file (optional)
 └── ui.js         # Vue UI integration (optional)
 ```
+
+## Naming and discoverability
+
+For a CLI plugin to be usable in a Vue CLI project, it must follow the name convention `vue-cli-plugin-<name>` or `@scope/vue-cli-plugin-<name>`. It allows your plugin to be:
+
+- Discoverable by `@vue/cli-service`;
+- Discoverable by other developers via searching;
+- Installable via `vue add <name>` or `vue invoke <name>`.
+
+:::warning Warning
+Make sure to name the plugin correctly, otherwise it will be impossible to install it via `vue add` command or find it with Vue UI plugins search!
+:::
+
+For better discoverability when a user searches for your plugin, put keywords describing your plugin in the `description` field of the plugin `package.json` file.
+
+Example:
+
+```json
+{
+  "name": "vue-cli-plugin-apollo",
+  "version": "0.7.7",
+  "description": "vue-cli plugin to add Apollo and GraphQL"
+}
+```
+
+You should add the url to the plugin website or repository in the `homepage` or `repository` field so that a 'More info' button will be displayed in your plugin description:
+
+```json
+{
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Akryum/vue-cli-plugin-apollo.git"
+  },
+  "homepage": "https://github.com/Akryum/vue-cli-plugin-apollo#readme"
+}
+```
+
+![Plugin search item](/plugin-search-item.png)
 
 ## Generator
 
@@ -234,18 +272,19 @@ api.onCreateComplete(() => {
 
 Finally, you need to write the content back to the main file:
 
-```js{11}
+```js{2,11}
 // generator/index.js
 
 api.onCreateComplete(() => {
+  const { EOL } = require('os')
   const fs = require('fs')
   const contentMain = fs.readFileSync(api.entryFile, { encoding: 'utf-8' })
   const lines = contentMain.split(/\r?\n/g)
 
   const renderIndex = lines.findIndex(line => line.match(/render/))
-  lines[renderIndex] += `\n  router,`
+   lines[renderIndex] += `${EOL}  router,`
 
-  fs.writeFileSync(api.entryFile, contentMain, { encoding: 'utf-8' })
+  fs.writeFileSync(api.entryFile, lines.join(EOL), { encoding: 'utf-8' })
 })
 ```
 
@@ -764,41 +803,6 @@ You can put a `logo.png` file in the root directory of the folder that will be p
 ![Plugins](/plugins.png)
 
 The logo should be a square non-transparent image (ideally 84x84).
-
-### Discoverability
-
-For a CLI plugin to be usable by other developers, it must be published on npm following the name convention `vue-cli-plugin-<name>` or `@scope/vue-cli-plugin-<name>`. Following the name convention allows your plugin to be:
-
-- Discoverable by `@vue/cli-service`;
-- Discoverable by other developers via searching;
-- Installable via `vue add <name>` or `vue invoke <name>`.
-
-For better discoverability when a user searches for your plugin, put keywords describing your plugin in the `description` field of the plugin `package.json` file.
-
-Example:
-
-```json
-{
-  "name": "vue-cli-plugin-apollo",
-  "version": "0.7.7",
-  "description": "vue-cli plugin to add Apollo and GraphQL"
-}
-```
-
-You should add the url to the plugin website or repository in the `homepage` or `repository` field so that a 'More info' button will be displayed in your plugin description:
-
-```json
-{
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Akryum/vue-cli-plugin-apollo.git"
-  },
-  "homepage": "https://github.com/Akryum/vue-cli-plugin-apollo#readme"
-}
-```
-
-![Plugin search item](/plugin-search-item.png)
-
 
 ## Publish Plugin to npm
 
